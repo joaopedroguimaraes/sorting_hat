@@ -2,6 +2,7 @@ import pandas as pd
 from person import Person
 from group import Group
 
+
 def read():
     data = pd.read_csv("files/arquivo.csv")
     people = []
@@ -23,3 +24,14 @@ def read():
                 groups.append(new_group)
         people.append(new_person)
     return people, groups
+
+
+def write_results(results):
+    column_person_name = [person_result.split(';')[0].strip() for person_result in results]
+    column_group_theme = [person_result.split(';')[1].strip() for person_result in results]
+    results_formatted = {
+        'Nome ou apelido': column_person_name,
+        'Tema': column_group_theme
+    }
+    df = pd.DataFrame(results_formatted, columns=['Nome ou apelido', 'Tema'])
+    df.to_csv("files/arquivo_resultados.csv", sep='\t', encoding='utf-8', index=False, header=True)

@@ -13,5 +13,8 @@ class Person(object):
             result.append(group.theme)
         return result
 
+    def preferred_group(self):
+        return self.preferred_groups[0]
+
     def __str__(self):
         return "Pessoa: {}, grupos {}".format(self.name, self.preferred_groups)

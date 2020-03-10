@@ -1,5 +1,6 @@
 import networkx as nx
 import sheet
+from utils import most_desired_preferred_groups
 
 people, groups = sheet.read()
 
@@ -7,39 +8,40 @@ dict_people = {}
 for person in people:
     dict_people[person.name] = person.all_groups()
 
-capacities = {
-    'Indisciplina': 6,
-    'Violência Escolar e Bullying': 6,
-    'Educação Sexual na Escola': 7,
-    'Medicalização (TOD/TDAH)': 7,
-    'Relações Raciais na Escola': 6,
-    'Relações Escola e Cultura Popular': 6
-}
+capacity_minimal = int(len(people)/len(groups))
+capacity_mod = len(people) % len(groups)
+
+capacities = {group.theme: capacity_minimal for group in groups}
+for group_theme in most_desired_preferred_groups(people, capacity_mod):
+    capacities[group_theme] = capacity_minimal + 1
 
 G = nx.DiGraph()
 
-num_persons=len(dict_people)
+num_persons = len(dict_people)
 G.add_node('dest', demand=num_persons)
 A = []
-for person, projectlist in dict_people.items():
+for person, group_themelist in dict_people.items():
     G.add_node(person, demand=-1)
-    for i, project in enumerate(projectlist):
+    for i, group_theme in enumerate(group_themelist):
         if i == 0:
             cost = -10  # happy to assign first choices
         elif i == 1:
             cost = -8  # slightly unhappy to assign second choices
-        G.add_edge(person, project, capacity=1, weight=cost)  # Edge taken if person does this project
+        G.add_edge(person, group_theme, capacity=1, weight=cost)  # Edge taken if person does this group_theme
 
-for project, c in capacities.items():
-    G.add_edge(project, 'dest', capacity=c, weight=0)
+for group_theme, c in capacities.items():
+    G.add_edge(group_theme, 'dest', capacity=c, weight=0)
 
+results = []
 try:
     flowdict = nx.min_cost_flow(G)
 
     for person in dict_people:
-        for project, flow in flowdict[person].items():
+        for group_theme, flow in flowdict[person].items():
             if flow:
-                print(person + ';' + project)
-                # pass
+                print(person + ';' + group_theme)
+                results.append(f"{person};{group_theme}")
+
+    sheet.write_results(results)
 except Exception as e:
     print(str(e))
